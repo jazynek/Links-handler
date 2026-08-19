@@ -65,7 +65,7 @@
 				<Condition sr="c0" ve="3">
 					<lhs>%evtprm2</lhs>
 					<op>0</op>
-					<rhs>Paulina Kuczkowska</rhs>
+					<rhs>%target_contact</rhs>
 				</Condition>
 			</ConditionList>
 		</Action>
