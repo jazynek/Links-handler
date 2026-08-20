@@ -47,12 +47,23 @@ trigger.
 Po imporcie sprawdź też:
 - czy profil „Messenger Links” jest **włączony** (pasek u góry profilu w
   Tasker powinien być kolorowy, nie wyszarzony),
-- czy pole filtru tytułu w zdarzeniu Notification pokazuje `.*` (a nie
-  jest puste) — puste pole w tym konkretnym zdarzeniu bywa w niektórych
-  wersjach Taskera traktowane inaczej niż "dopasuj cokolwiek", dlatego
-  wpisałem jawny wildcard `.*` zamiast zostawiać pole puste,
 - czy dostęp do powiadomień dla Taskera jest wciąż aktywny w Ustawienia →
   Aplikacje → Dostęp specjalny → Dostęp do powiadomień.
+
+**Uwaga o polu filtru tytułu** w zdarzeniu Notification (`arg1`): w
+oryginalnym pliku miało ono zwykły tekst („Paulina Kuczkowska”), bez
+składni regex — czyli robi zwykłe dopasowanie tekstu, nie regex. Zostawiam
+je teraz **puste**, co w Tasker oznacza „brak filtra, dopasuj każdy
+tytuł” (dokładnie tak samo puste są pola `arg2`-`arg6` w oryginale i to
+nigdy nie było problemem). Jeśli mimo to profil nadal się nie uruchamia,
+to prawdopodobnie w Twojej wersji Taskera puste pole rzeczywiście nie
+działa jako wildcard — w takim razie zamiast zostawiać pole puste, wpisz
+w nim `%target_contact` (tę samą zmienną, którą i tak ustawiasz w Kroku
+0), co odtworzy dokładnie sprawdzone, oryginalne zachowanie (filtr po
+konkretnej osobie), tylko bez wpisanego na sztywno imienia i nazwiska w
+repozytorium. W tym wariancie zapis do pliku i powiadomienie też będą
+tylko dla tej jednej osoby — czyli wracamy do zakresu z oryginalnego
+pliku, zamiast łapania linków od wszystkich.
 
 ## Krok 0: kogo pilnujemy (TickTick)
 

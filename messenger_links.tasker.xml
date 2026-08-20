@@ -14,7 +14,7 @@
 				<appPkg>com.facebook.orca</appPkg>
 				<label>Messenger</label>
 			</App>
-			<Str sr="arg1" ve="3">.*</Str>
+			<Str sr="arg1" ve="3"/>
 			<Str sr="arg2" ve="3"/>
 			<Str sr="arg3" ve="3"/>
 			<Str sr="arg4" ve="3"/>
