@@ -34,7 +34,7 @@
 			<coll>false</coll>
 			<ConditionList sr="if">
 				<Condition sr="c0" ve="3">
-					<lhs>%evtprm3%evtprm4</lhs>
+					<lhs>%evtprm3</lhs>
 					<op>4</op>
 					<rhs>(http|ftp|https):\/\/([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&amp;:\/~+#-]*[\w@?^=%&amp;\/~+#-])</rhs>
 				</Condition>
@@ -42,7 +42,7 @@
 		</Action>
 		<Action sr="act1" ve="7">
 			<code>598</code>
-			<Str sr="arg0" ve="3">%evtprm3%evtprm4</Str>
+			<Str sr="arg0" ve="3">%evtprm3</Str>
 			<Str sr="arg1" ve="3">(http|ftp|https):\/\/([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&amp;:\/~+#-]*[\w@?^=%&amp;\/~+#-])</Str>
 			<Int sr="arg2" val="0"/>
 			<Int sr="arg3" val="0"/>

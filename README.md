@@ -11,9 +11,6 @@ przypomnienie w TickTick z tym linkiem.
   powiadomienia do jednej osoby — teraz reaguje na powiadomienia
   z Messengera od **dowolnej osoby**, ale nadal tylko wtedy, gdy treść
   zawiera link (warunek regex w akcji If bez zmian).
-- Warunek i wyciąganie linku sprawdzają teraz `%evtprm3%evtprm4` (Text +
-  Big Text) zamiast samego `%evtprm3` — patrz sekcja "Wiadomości z
-  podglądem linku (zdjęcie)" niżej.
 - **Task** (`Messenger Links To Tasks`) ma nowe akcje:
   1. `If` (regex linku) — bez zmian.
   2. `Matches Regex` → wyciąga link do `%links` — bez zmian.
@@ -71,9 +68,17 @@ Imię i nazwisko osoby, dla której mają powstawać przypomnienia w
 TickTick, nie jest wpisane w tym repozytorium — jest ustawiane lokalnie,
 w Tasker, jako zmienna globalna `%target_contact`.
 
+**Ważne:** `%evtprm2` to nie zawsze pełne imię i nazwisko — może to być
+pseudonim/nazwa, jaką masz zapisaną w kontaktach albo w czacie
+Messengera (np. w testach na jednym telefonie pojawiła się wartość
+„Kucza” zamiast pełnego imienia i nazwiska). Zanim ustawisz
+`%target_contact`, sprawdź dokładną wartość `%evtprm2` dla realnej
+wiadomości od tej osoby — najprościej profilem diagnostycznym opisanym w
+sekcji „Diagnostyka” niżej.
+
 W Tasker: dowolny task jednorazowy → akcja `Variable Set`, Name =
-`%target_contact`, To = dokładna nazwa wyświetlana w powiadomieniu
-Messengera (musi się zgadzać znak w znak z `%evtprm2`). Uruchom raz
+`%target_contact`, To = dokładna wartość, jaką faktycznie zobaczysz w
+`%evtprm2` (znak w znak, łącznie z wielkością liter). Uruchom raz
 ręcznie.
 
 ## Krok 1: Zapis do pliku
@@ -127,35 +132,40 @@ Jeśli chcesz, żeby zadanie trafiało do konkretnego projektu (listy) w
 TickTick zamiast do Inbox, dodaj w Body pole `"projectId":"..."` z ID
 projektu (znajdziesz je np. przez `GET /open/v1/project` w ich API).
 
-## Wiadomości z podglądem linku (zdjęcie)
+## Diagnostyka: co naprawdę jest w %evtprm
 
-Messenger dla wiadomości z linkiem, który ma podgląd (miniaturkę), często
-pokazuje krótkie powiadomienie typu „Wysłała zdjęcie”, a sam link jest
-dopiero w rozwiniętej treści powiadomienia (tzw. Big Text). Wcześniej
-sprawdzaliśmy tylko krótki tekst (`%evtprm3`), więc taki link był
-pomijany.
+W tym repo jest osobny plik **`diagnostyka_powiadomien.tasker.xml`** —
+minimalny profil bez żadnych filtrów/warunków, który przy **każdym**
+powiadomieniu na telefonie pokazuje treść `%evtprm1`-`%evtprm5`.
+Zaimportuj go (to osobny profil „DIAG Notification Test”, nie koliduje z
+„Messenger Links”), wywołaj powiadomienie które chcesz zdiagnozować, a
+potem usuń profil DIAG, gdy skończysz.
 
-Teraz warunek `If` i wyciąganie linku sprawdzają `%evtprm3%evtprm4`
-(Text + Big Text sklejone w jeden string) — zakładam, że `%evtprm4` to
-Big Text zgodnie z typową kolejnością parametrów zdarzenia
-`Notification` w Tasker. **To założenie warto zweryfikować** na swoim
-telefonie, bo dokładna numeracja `%evtprm` może się różnić między
-wersjami Taskera/Androida.
+Co już z niego wiemy (na podstawie testu na jednym telefonie):
+- `%evtprm2` = nazwa/tytuł z powiadomienia (może to być pseudonim, nie
+  pełne imię i nazwisko — patrz „Krok 0” wyżej).
+- `%evtprm3` = treść powiadomienia.
+- `%evtprm4` i `%evtprm5` **nie istnieją** dla tego zdarzenia w Tasker —
+  próba użycia ich (`%evtprm3%evtprm4`) dokładała do treści dosłowny,
+  niepodstawiony tekst `%evtprm4`, co psuło dopasowanie regexu (warunek
+  w akcji `If` robi pełne dopasowanie do całego tekstu, więc doklejony
+  „śmieć” na końcu unieważniał nawet zwykłe, wcześniej działające
+  linki). **Dlatego cofnąłem warunek i wyciąganie linku z powrotem do
+  samego `%evtprm3`.**
 
-Jak sprawdzić, co faktycznie siedzi w poszczególnych `%evtprm`:
+## Wiadomości z podglądem linku (zdjęcie) — wciąż do zdiagnozowania
 
-1. W tasku „Messenger Links To Tasks” dodaj tymczasowo na samym początku
-   (przed pierwszym `If`) akcję **Flash** (albo **Notify**) z tekstem:
-   `%evtprm1|%evtprm2|%evtprm3|%evtprm4|%evtprm5|%evtprm6|%evtprm7`.
-2. Wyłącz na chwilę pierwszy warunek `If` (np. dodaj przed nim drugi task
-   testowy bez warunku, albo tymczasowo zmień regex na dopasowujący
-   wszystko, np. `.*`), żeby zobaczyć wartości nawet dla powiadomienia ze
-   zdjęciem.
-3. Wyślij sobie testowy link z podglądem i zobacz w Flashu, w którym
-   polu faktycznie jest URL.
-4. Jeśli to nie `%evtprm4`, podmień w akcjach `If` i `Matches Regex`
-   `%evtprm3%evtprm4` na właściwą kombinację (np. `%evtprm3%evtprm5`), a
-   potem usuń tymczasową akcję Flash i przywróć oryginalny warunek.
+Messenger dla wiadomości z linkiem, który ma podgląd (miniaturkę), może
+pokazywać krótkie powiadomienie typu „Wysłała zdjęcie” zamiast samego
+linku w `%evtprm3`. Skoro `%evtprm4`/`%evtprm5` nie istnieją, nie wiemy
+jeszcze, w którym dokładnie polu (jeśli w ogóle w jakimś oddzielnym) ląduje
+link dla takiej wiadomości — trzeba to sprawdzić profilem DIAG opisanym
+wyżej, wysyłając sobie realną wiadomość z podglądem linku (nie zwykły
+tekst) i patrząc, co faktycznie pokaże się w `%evtprm1`-`%evtprm5`. Jeśli
+link nigdzie się nie pojawi, może się okazać, że trzeba złapać zupełnie
+inne pole notification (np. `actions`/`extras`), którego obecne Tasker
+Notification event może nie eksponować wprost — wtedy zgłoś mi dokładną
+treść z DIAG, dopasujemy rozwiązanie do realnych danych.
 
 ## Test
 
