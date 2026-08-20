@@ -11,6 +11,9 @@ przypomnienie w TickTick z tym linkiem.
   powiadomienia do jednej osoby — teraz reaguje na powiadomienia
   z Messengera od **dowolnej osoby**, ale nadal tylko wtedy, gdy treść
   zawiera link (warunek regex w akcji If bez zmian).
+- Warunek i wyciąganie linku sprawdzają teraz `%evtprm3%evtprm4` (Text +
+  Big Text) zamiast samego `%evtprm3` — patrz sekcja "Wiadomości z
+  podglądem linku (zdjęcie)" niżej.
 - **Task** (`Messenger Links To Tasks`) ma nowe akcje:
   1. `If` (regex linku) — bez zmian.
   2. `Matches Regex` → wyciąga link do `%links` — bez zmian.
@@ -96,6 +99,36 @@ sprawdź/popraw wartości:
 Jeśli chcesz, żeby zadanie trafiało do konkretnego projektu (listy) w
 TickTick zamiast do Inbox, dodaj w Body pole `"projectId":"..."` z ID
 projektu (znajdziesz je np. przez `GET /open/v1/project` w ich API).
+
+## Wiadomości z podglądem linku (zdjęcie)
+
+Messenger dla wiadomości z linkiem, który ma podgląd (miniaturkę), często
+pokazuje krótkie powiadomienie typu „Wysłała zdjęcie”, a sam link jest
+dopiero w rozwiniętej treści powiadomienia (tzw. Big Text). Wcześniej
+sprawdzaliśmy tylko krótki tekst (`%evtprm3`), więc taki link był
+pomijany.
+
+Teraz warunek `If` i wyciąganie linku sprawdzają `%evtprm3%evtprm4`
+(Text + Big Text sklejone w jeden string) — zakładam, że `%evtprm4` to
+Big Text zgodnie z typową kolejnością parametrów zdarzenia
+`Notification` w Tasker. **To założenie warto zweryfikować** na swoim
+telefonie, bo dokładna numeracja `%evtprm` może się różnić między
+wersjami Taskera/Androida.
+
+Jak sprawdzić, co faktycznie siedzi w poszczególnych `%evtprm`:
+
+1. W tasku „Messenger Links To Tasks” dodaj tymczasowo na samym początku
+   (przed pierwszym `If`) akcję **Flash** (albo **Notify**) z tekstem:
+   `%evtprm1|%evtprm2|%evtprm3|%evtprm4|%evtprm5|%evtprm6|%evtprm7`.
+2. Wyłącz na chwilę pierwszy warunek `If` (np. dodaj przed nim drugi task
+   testowy bez warunku, albo tymczasowo zmień regex na dopasowujący
+   wszystko, np. `.*`), żeby zobaczyć wartości nawet dla powiadomienia ze
+   zdjęciem.
+3. Wyślij sobie testowy link z podglądem i zobacz w Flashu, w którym
+   polu faktycznie jest URL.
+4. Jeśli to nie `%evtprm4`, podmień w akcjach `If` i `Matches Regex`
+   `%evtprm3%evtprm4` na właściwą kombinację (np. `%evtprm3%evtprm5`), a
+   potem usuń tymczasową akcję Flash i przywróć oryginalny warunek.
 
 ## Test
 
