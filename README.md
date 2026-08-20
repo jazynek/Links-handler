@@ -38,6 +38,22 @@ przypomnienie w TickTick z tym linkiem.
 3. Zaakceptuj uprawnienia, o które poprosi Tasker (dostęp do powiadomień,
    dostęp do pamięci).
 
+**Jeśli wcześniej importowałeś starszą wersję tego profilu**, przed
+ponownym importem usuń starą wersję (długie przytrzymanie na profilu
+„Messenger Links” → Delete). Import z tym samym ID czasem tworzy duplikat
+albo nie nadpisuje wszystkich pól poprawnie, co może wyglądać jak "pusty"
+trigger.
+
+Po imporcie sprawdź też:
+- czy profil „Messenger Links” jest **włączony** (pasek u góry profilu w
+  Tasker powinien być kolorowy, nie wyszarzony),
+- czy pole filtru tytułu w zdarzeniu Notification pokazuje `.*` (a nie
+  jest puste) — puste pole w tym konkretnym zdarzeniu bywa w niektórych
+  wersjach Taskera traktowane inaczej niż "dopasuj cokolwiek", dlatego
+  wpisałem jawny wildcard `.*` zamiast zostawiać pole puste,
+- czy dostęp do powiadomień dla Taskera jest wciąż aktywny w Ustawienia →
+  Aplikacje → Dostęp specjalny → Dostęp do powiadomień.
+
 ## Krok 0: kogo pilnujemy (TickTick)
 
 Imię i nazwisko osoby, dla której mają powstawać przypomnienia w
