@@ -48,33 +48,52 @@ zobaczysz razem 5 kroków.
 Na Androidzie 11+ może być potrzebne przyznanie Taskerowi uprawnienia
 „Zarządzanie wszystkimi plikami” w ustawieniach systemowych.
 
-### B. „HTTP Request” do TickTick — wewnątrz drugiego `If` (między krokiem 3 a 4)
+### B. „JavaScriptlet” (termin przypomnienia) + „HTTP Request” do TickTick — wewnątrz drugiego `If` (między krokiem 3 a 4)
+
+TickTick wymaga, żeby termin (`dueDate`) był w formacie ISO 8601 UTC —
+prościej i pewniej wyliczyć go jedną akcją JavaScriptlet niż zgadywać
+składnię matematyki dat w zwykłym polu tekstowym Taskera.
 
 1. Dotknij `+` zaraz po kroku 3 (czyli wewnątrz `If %evtprm2 eq %target_contact`).
-2. Wyszukaj akcję **HTTP Request** (kategoria Net; jeśli Twoja wersja
-   Taskera jej nie ma, poszukaj **HTTP Post**).
-3. Ustaw:
+2. Wyszukaj akcję **JavaScriptlet** i wklej kod:
+   ```javascript
+   var d = new Date(Date.now() + 2*60*60*1000);
+   setGlobal("due_date", d.toISOString());
+   ```
+   (`2*60*60*1000` = 2 godziny w milisekundach — zmień na inną wartość,
+   jeśli chcesz inny odstęp).
+3. Zaraz po tej akcji dodaj kolejną: wyszukaj **HTTP Request**
+   (kategoria Net; jeśli Twoja wersja Taskera jej nie ma, poszukaj
+   **HTTP Post**).
+4. Ustaw:
 
    | Pole | Wartość |
    |---|---|
    | Method | `POST` |
    | URL | `https://api.ticktick.com/open/v1/task` |
    | Headers | `Content-Type: application/json`<br>`Authorization: Bearer %ticktick_token` |
-   | Body | `{"title":"Link od %evtprm2","content":"%links(1)"}` |
+   | Body | `{"title":"Link od %evtprm2","content":"%links(1)","priority":3,"dueDate":"%due_date","reminders":["TRIGGER:PT0S"],"timeZone":"Europe/Warsaw"}` |
+
+Co robią dodatkowe pola w Body:
+- `"priority":3` — priorytet Średni (0=brak, 1=Niski, 3=Średni, 5=Wysoki).
+- `"dueDate":"%due_date"` — termin obliczony w kroku 2.
+- `"reminders":["TRIGGER:PT0S"]` — przypomnienie dokładnie w momencie terminu.
+- `"timeZone":"Europe/Warsaw"` — strefa czasowa do poprawnej interpretacji terminu.
 
 Jeśli chcesz, żeby zadanie trafiało do konkretnego projektu (listy) w
 TickTick zamiast do Inbox, dodaj w Body pole `"projectId":"..."` z ID
 projektu (znajdziesz je np. przez `GET /open/v1/project` w ich API).
 
-Po dodaniu obu akcji cała lista kroków w tasku powinna wyglądać tak:
+Po dodaniu wszystkich akcji cała lista kroków w tasku powinna wyglądać tak:
 
 1. `If` (regex linku)
 2. `Variable Search Replace`
 3. `Write File` ← dodane ręcznie
 4. `If %evtprm2 eq %target_contact`
-5. `HTTP Request` (TickTick) ← dodane ręcznie
-6. `End If`
+5. `JavaScriptlet` (oblicza `%due_date`) ← dodane ręcznie
+6. `HTTP Request` (TickTick) ← dodane ręcznie
 7. `End If`
+8. `End If`
 
 ## Import do Taskera
 
