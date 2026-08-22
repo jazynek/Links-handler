@@ -23,7 +23,7 @@ zostawia **celowo pustą przestrzeń** do ręcznego uzupełnienia.
 
 ## Co jest w zaimportowanym szkielecie
 
-Po imporcie zobaczysz w tasku „Messenger Links To Tasks” 4 kroki:
+Po imporcie zobaczysz w tasku „Messenger Links To Tasks v2” 4 kroki:
 
 1. `If` — `%evtprm3 ~R (regex linku)` (dokładnie jak w oryginale)
 2. `Variable Search Replace` — wyciąga link z `%evtprm3` do `%links` (jak w oryginale)
@@ -82,8 +82,8 @@ Po dodaniu obu akcji cała lista kroków w tasku powinna wyglądać tak:
    Drive, e-mail do siebie, albo `adb push`).
 2. **Usuń każdą wcześniejszą wersję** tego profilu i tasku przed
    ponownym importem: w zakładce **Tasks** znajdź i usuń wszystkie taski
-   „Messenger Links To Tasks” (może być więcej niż jeden), potem w
-   zakładce **Profiles** usuń profil „Messenger Links”. Import z tym
+   „Messenger Links To Tasks v2” (może być więcej niż jeden), potem w
+   zakładce **Profiles** usuń profil „Messenger Links v2”. Import z tym
    samym ID potrafi doklejać stare akcje do nowych zamiast je czysto
    nadpisać.
 3. W Taskerze: **Profile → długie przytrzymanie w pustym miejscu → Import
@@ -93,7 +93,7 @@ Po dodaniu obu akcji cała lista kroków w tasku powinna wyglądać tak:
 5. Dodaj ręcznie akcje A i B opisane wyżej.
 
 Po imporcie sprawdź też:
-- czy profil „Messenger Links” jest **włączony** (pasek u góry profilu w
+- czy profil „Messenger Links v2” jest **włączony** (pasek u góry profilu w
   Tasker powinien być kolorowy, nie wyszarzony),
 - czy dostęp do powiadomień dla Taskera jest wciąż aktywny w Ustawienia →
   Aplikacje → Dostęp specjalny → Dostęp do powiadomień.
