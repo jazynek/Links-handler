@@ -5,62 +5,98 @@ wykryte linki do pliku na telefonie, a jeśli wiadomość jest od wybranej
 osoby (skonfigurowanej lokalnie, patrz niżej) — dodatkowo tworzy
 przypomnienie w TickTick z tym linkiem.
 
-## Co zmieniło się względem oryginału
+## Ważne: dlaczego dwie akcje trzeba dodać ręcznie
 
-- **Profil** (`Messenger Links`) już nie jest ograniczony samym tytułem
-  powiadomienia do jednej osoby — teraz reaguje na powiadomienia
-  z Messengera od **dowolnej osoby**, ale nadal tylko wtedy, gdy treść
-  zawiera link (warunek regex w akcji If bez zmian).
-- **Task** (`Messenger Links To Tasks`) ma nowe akcje:
-  1. `If` (regex linku) — bez zmian.
-  2. `Matches Regex` → wyciąga link do `%links` — bez zmian.
-  3. **`Write File`** (nowe) — dopisuje linię z datą, nadawcą i linkiem do
-     pliku `messenger_links.txt`.
-  4. **`If %evtprm2 = %target_contact`** (nowe) — dalsze kroki tylko dla
-     osoby wskazanej w zmiennej `%target_contact` (patrz "Krok 0" niżej).
-  5. **`HTTP Request`** (nowe) — POST do TickTick Open API, tworzy zadanie
-     z linkiem w treści.
-  6. `End If`
-  7. `Notify` — powiadomienie na telefonie, jak wcześniej (teraz dla
-     każdego nadawcy).
-  8. `End If`
+Wcześniej próbowałem wpisać akcje „Write File” i „HTTP Request”
+bezpośrednio jako surowy XML, zgadując ich numeryczne kody. To był błąd —
+w Twojej wersji Taskera kod, którego użyłem dla „Write File” (129) to
+faktycznie **JavaScriptlet**, a kod dla „HTTP Request” (339) w ogóle się
+nie zaimportował. Numeracja kodów akcji różni się między wersjami
+Taskera i nie da się jej bezpiecznie zgadnąć z zewnątrz — jedyny pewny
+sposób to dodanie tych dwóch akcji ręcznie przez wyszukiwarkę akcji w
+samym Tasker (wtedy aplikacja sama dobiera poprawny kod).
+
+Plik `messenger_links.tasker.xml` zawiera więc tylko te fragmenty, które
+są zweryfikowane (bo pochodzą 1:1 z Twojego oryginalnego, działającego
+pliku, albo są prostymi warunkami `If`/`End If`), a w dwóch miejscach
+zostawia **celowo pustą przestrzeń** do ręcznego uzupełnienia.
+
+## Co jest w zaimportowanym szkielecie
+
+Po imporcie zobaczysz w tasku „Messenger Links To Tasks” 4 kroki:
+
+1. `If` — `%evtprm3 ~R (regex linku)` (dokładnie jak w oryginale)
+2. `Variable Search Replace` — wyciąga link z `%evtprm3` do `%links` (jak w oryginale)
+3. `If` — `%evtprm2 eq %target_contact` (nowe — filtr po osobie, patrz Krok 0)
+4. `End If` (zamyka krok 3)
+
+Na końcu jest jeszcze jeden `End If`, zamykający krok 1 — czyli w liście
+zobaczysz razem 5 kroków.
+
+**Musisz dodać ręcznie dwie akcje:**
+
+### A. „Write File” — zaraz po kroku 2, przed krokiem 3
+
+1. Otwórz task, dotknij `+` między krokiem 2 a 3.
+2. Wybierz kategorię **File** → akcję **Write File**.
+3. Ustaw:
+   - **File**: `/storage/emulated/0/Documents/messenger_links.txt`
+   - **Text**: `%TIMES %TIMEM | %evtprm2 | %links(1)`
+   - **Add** (dopisywanie, nie nadpisywanie): włączone
+   - **Add Newline**: włączone
+
+Na Androidzie 11+ może być potrzebne przyznanie Taskerowi uprawnienia
+„Zarządzanie wszystkimi plikami” w ustawieniach systemowych.
+
+### B. „HTTP Request” do TickTick — wewnątrz drugiego `If` (między krokiem 3 a 4)
+
+1. Dotknij `+` zaraz po kroku 3 (czyli wewnątrz `If %evtprm2 eq %target_contact`).
+2. Wyszukaj akcję **HTTP Request** (kategoria Net; jeśli Twoja wersja
+   Taskera jej nie ma, poszukaj **HTTP Post**).
+3. Ustaw:
+
+   | Pole | Wartość |
+   |---|---|
+   | Method | `POST` |
+   | URL | `https://api.ticktick.com/open/v1/task` |
+   | Headers | `Content-Type: application/json`<br>`Authorization: Bearer %ticktick_token` |
+   | Body | `{"title":"Link od %evtprm2","content":"%links(1)"}` |
+
+Jeśli chcesz, żeby zadanie trafiało do konkretnego projektu (listy) w
+TickTick zamiast do Inbox, dodaj w Body pole `"projectId":"..."` z ID
+projektu (znajdziesz je np. przez `GET /open/v1/project` w ich API).
+
+Po dodaniu obu akcji cała lista kroków w tasku powinna wyglądać tak:
+
+1. `If` (regex linku)
+2. `Variable Search Replace`
+3. `Write File` ← dodane ręcznie
+4. `If %evtprm2 eq %target_contact`
+5. `HTTP Request` (TickTick) ← dodane ręcznie
+6. `End If`
+7. `End If`
 
 ## Import do Taskera
 
 1. Skopiuj plik `messenger_links.tasker.xml` na telefon (np. przez Google
    Drive, e-mail do siebie, albo `adb push`).
-2. W Taskerze: **Profile → długie przytrzymanie w pustym miejscu → Import
-   Profile** i wskaż plik (albo otwórz plik menedżerem plików — Tasker
-   powinien zaproponować import).
-3. Zaakceptuj uprawnienia, o które poprosi Tasker (dostęp do powiadomień,
+2. **Usuń każdą wcześniejszą wersję** tego profilu i tasku przed
+   ponownym importem: w zakładce **Tasks** znajdź i usuń wszystkie taski
+   „Messenger Links To Tasks” (może być więcej niż jeden), potem w
+   zakładce **Profiles** usuń profil „Messenger Links”. Import z tym
+   samym ID potrafi doklejać stare akcje do nowych zamiast je czysto
+   nadpisać.
+3. W Taskerze: **Profile → długie przytrzymanie w pustym miejscu → Import
+   Profile** i wskaż plik.
+4. Zaakceptuj uprawnienia, o które poprosi Tasker (dostęp do powiadomień,
    dostęp do pamięci).
-
-**Jeśli wcześniej importowałeś starszą wersję tego profilu**, przed
-ponownym importem usuń starą wersję (długie przytrzymanie na profilu
-„Messenger Links” → Delete). Import z tym samym ID czasem tworzy duplikat
-albo nie nadpisuje wszystkich pól poprawnie, co może wyglądać jak "pusty"
-trigger.
+5. Dodaj ręcznie akcje A i B opisane wyżej.
 
 Po imporcie sprawdź też:
 - czy profil „Messenger Links” jest **włączony** (pasek u góry profilu w
   Tasker powinien być kolorowy, nie wyszarzony),
 - czy dostęp do powiadomień dla Taskera jest wciąż aktywny w Ustawienia →
   Aplikacje → Dostęp specjalny → Dostęp do powiadomień.
-
-**Uwaga o polu filtru tytułu** w zdarzeniu Notification (`arg1`): w
-oryginalnym pliku miało ono zwykły tekst („Paulina Kuczkowska”), bez
-składni regex — czyli robi zwykłe dopasowanie tekstu, nie regex. Zostawiam
-je teraz **puste**, co w Tasker oznacza „brak filtra, dopasuj każdy
-tytuł” (dokładnie tak samo puste są pola `arg2`-`arg6` w oryginale i to
-nigdy nie było problemem). Jeśli mimo to profil nadal się nie uruchamia,
-to prawdopodobnie w Twojej wersji Taskera puste pole rzeczywiście nie
-działa jako wildcard — w takim razie zamiast zostawiać pole puste, wpisz
-w nim `%target_contact` (tę samą zmienną, którą i tak ustawiasz w Kroku
-0), co odtworzy dokładnie sprawdzone, oryginalne zachowanie (filtr po
-konkretnej osobie), tylko bez wpisanego na sztywno imienia i nazwiska w
-repozytorium. W tym wariancie zapis do pliku i powiadomienie też będą
-tylko dla tej jednej osoby — czyli wracamy do zakresu z oryginalnego
-pliku, zamiast łapania linków od wszystkich.
 
 ## Krok 0: kogo pilnujemy (TickTick)
 
@@ -81,56 +117,20 @@ W Tasker: dowolny task jednorazowy → akcja `Variable Set`, Name =
 `%evtprm2` (znak w znak, łącznie z wielkością liter). Uruchom raz
 ręcznie.
 
-## Krok 1: Zapis do pliku
-
-Domyślna ścieżka to:
-
-```
-/storage/emulated/0/Documents/messenger_links.txt
-```
-
-Możesz ją zmienić w akcji **Write File** wewnątrz tasku. Na Androidzie
-11+ może być potrzebne przyznanie Taskerowi uprawnienia „Zarządzanie
-wszystkimi plikami” (All files access) w ustawieniach systemowych, żeby
-zapis się udał.
-
-Każda linia w pliku ma format:
-
-```
-GG:MM | Nadawca | https://link...
-```
-
-## Krok 2: TickTick — token API (wymagane ręcznie)
-
-Tasker nie ma wbudowanej integracji z TickTick, więc używamy akcji
-**HTTP Request** wywołującej oficjalne TickTick Open API.
+## Krok 1: token API TickTick (wymagane ręcznie)
 
 1. Wejdź na https://developer.ticktick.com/manage i zarejestruj
    aplikację (Client ID/Secret) — potrzebne do przeprowadzenia
    autoryzacji OAuth2.
 2. Przeprowadź przepływ OAuth2 (authorization code), żeby uzyskać
-   **access token**. TickTick nie udostępnia tokenów długoterminowych z
-   poziomu samej apki, więc token trzeba wygenerować raz przez OAuth
-   (np. lokalnym skryptem/Postmanem) i potem odświeżać zgodnie z ich API.
+   **access token** (patrz historia tej rozmowy/repo dla dokładnych
+   kroków z `curl`/PowerShell).
 3. W Taskerze utwórz zmienną globalną `%ticktick_token` z wartością
-   tokena: **Profile → długie przytrzymanie → Task Variables** albo po
-   prostu akcją `Variable Set` uruchomioną raz ręcznie.
+   tokena: dowolny task jednorazowy → akcja `Variable Set` → uruchom raz
+   ręcznie.
 
-**Ważne:** dokładny układ pól (Method/URL/Headers/Body) w surowym XML
-akcji HTTP Request może się różnić między wersjami Taskera. Po imporcie
-otwórz akcję `HTTP Request` w tasku „Messenger Links To Tasks” i
-sprawdź/popraw wartości:
-
-| Pole | Wartość |
-|---|---|
-| Method | `POST` |
-| URL | `https://api.ticktick.com/open/v1/task` |
-| Headers | `Content-Type: application/json`<br>`Authorization: Bearer %ticktick_token` |
-| Body | `{"title":"Link od %evtprm2","content":"%links(1)"}` |
-
-Jeśli chcesz, żeby zadanie trafiało do konkretnego projektu (listy) w
-TickTick zamiast do Inbox, dodaj w Body pole `"projectId":"..."` z ID
-projektu (znajdziesz je np. przez `GET /open/v1/project` w ich API).
+Token ma zwykle ~180 dni ważności (`expires_in` w odpowiedzi) — po tym
+czasie trzeba będzie powtórzyć autoryzację.
 
 ## Diagnostyka: co naprawdę jest w %evtprm
 
@@ -146,12 +146,7 @@ Co już z niego wiemy (na podstawie testu na jednym telefonie):
   pełne imię i nazwisko — patrz „Krok 0” wyżej).
 - `%evtprm3` = treść powiadomienia.
 - `%evtprm4` i `%evtprm5` **nie istnieją** dla tego zdarzenia w Tasker —
-  próba użycia ich (`%evtprm3%evtprm4`) dokładała do treści dosłowny,
-  niepodstawiony tekst `%evtprm4`, co psuło dopasowanie regexu (warunek
-  w akcji `If` robi pełne dopasowanie do całego tekstu, więc doklejony
-  „śmieć” na końcu unieważniał nawet zwykłe, wcześniej działające
-  linki). **Dlatego cofnąłem warunek i wyciąganie linku z powrotem do
-  samego `%evtprm3`.**
+  nie próbuj ich używać w warunkach/akcjach.
 
 ## Wiadomości z podglądem linku (zdjęcie) — wciąż do zdiagnozowania
 
@@ -163,9 +158,8 @@ link dla takiej wiadomości — trzeba to sprawdzić profilem DIAG opisanym
 wyżej, wysyłając sobie realną wiadomość z podglądem linku (nie zwykły
 tekst) i patrząc, co faktycznie pokaże się w `%evtprm1`-`%evtprm5`. Jeśli
 link nigdzie się nie pojawi, może się okazać, że trzeba złapać zupełnie
-inne pole notification (np. `actions`/`extras`), którego obecne Tasker
-Notification event może nie eksponować wprost — wtedy zgłoś mi dokładną
-treść z DIAG, dopasujemy rozwiązanie do realnych danych.
+inne pole notification, którego obecne Tasker Notification event może
+nie eksponować wprost — wtedy zgłoś mi dokładną treść z DIAG.
 
 ## Test
 
@@ -174,7 +168,6 @@ treść z DIAG, dopasujemy rozwiązanie do realnych danych.
    ustawiona w Kroku 0.
 2. Sprawdź, czy:
    - w pliku `messenger_links.txt` pojawiła się nowa linia,
-   - w TickTick pojawiło się nowe zadanie z linkiem,
-   - na telefonie pokazało się powiadomienie „Link od …”.
-3. Wyślij link od kogoś innego — powinien trafić tylko do pliku i do
-   powiadomienia, **bez** wpisu w TickTick.
+   - w TickTick pojawiło się nowe zadanie z linkiem.
+3. Wyślij link od kogoś innego — powinien trafić tylko do pliku,
+   **bez** wpisu w TickTick.

@@ -52,13 +52,6 @@
 			<Str sr="arg7" ve="3"/>
 		</Action>
 		<Action sr="act2" ve="7">
-			<code>129</code>
-			<Str sr="arg0" ve="3">/storage/emulated/0/Documents/messenger_links.txt</Str>
-			<Str sr="arg1" ve="3">%TIMES %TIMEM | %evtprm2 | %links(1)</Str>
-			<Int sr="arg2" val="1"/>
-			<Int sr="arg3" val="1"/>
-		</Action>
-		<Action sr="act3" ve="7">
 			<code>37</code>
 			<coll>false</coll>
 			<ConditionList sr="if">
@@ -69,29 +62,10 @@
 				</Condition>
 			</ConditionList>
 		</Action>
-		<Action sr="act4" ve="7">
-			<code>339</code>
-			<Str sr="arg0" ve="3">POST</Str>
-			<Str sr="arg1" ve="3">https://api.ticktick.com/open/v1/task</Str>
-			<Str sr="arg2" ve="3">Content-Type: application/json
-Authorization: Bearer %ticktick_token</Str>
-			<Str sr="arg3" ve="3">{"title":"Link od %evtprm2","content":"%links(1)"}</Str>
-			<Int sr="arg4" val="10"/>
-			<Int sr="arg5" val="0"/>
-			<Str sr="arg6" ve="3"/>
-			<Str sr="arg7" ve="3"/>
-			<Int sr="arg8" val="0"/>
-		</Action>
-		<Action sr="act5" ve="7">
+		<Action sr="act3" ve="7">
 			<code>38</code>
 		</Action>
-		<Action sr="act6" ve="7">
-			<code>125</code>
-			<Str sr="arg0" ve="3"/>
-			<Str sr="arg1" ve="3">Link od %evtprm2</Str>
-			<Str sr="arg2" ve="3">%links(1)</Str>
-		</Action>
-		<Action sr="act7" ve="7">
+		<Action sr="act4" ve="7">
 			<code>38</code>
 		</Action>
 	</Task>
