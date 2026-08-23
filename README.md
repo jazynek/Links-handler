@@ -59,7 +59,7 @@ składnię matematyki dat w zwykłym polu tekstowym Taskera.
    ```javascript
    var d = new Date(Date.now() + 2*60*60*1000);
    var iso = d.toISOString().replace('.000Z', '+0000');
-   setGlobal("due_date", iso);
+   setGlobal("DUE_DATE", iso);
    ```
    (`2*60*60*1000` = 2 godziny w milisekundach — zmień na inną wartość,
    jeśli chcesz inny odstęp). Format wynikowy to `2024-05-01T13:00:00+0000`
@@ -76,25 +76,31 @@ składnię matematyki dat w zwykłym polu tekstowym Taskera.
    | Method | `POST` |
    | URL | `https://api.ticktick.com/open/v1/task` |
    | Headers | `Content-Type: application/json`<br>`Authorization: Bearer %ticktick_token` |
-   | Body | `{"title":"Link od %evtprm2","content":"%links(1)","priority":3,"startDate":"%due_date","dueDate":"%due_date","isAllDay":false,"reminders":["TRIGGER:PT0S"],"timeZone":"Europe/Warsaw"}` |
+   | Body | `{"title":"Link od %evtprm2","content":"%links(1)","priority":3,"startDate":"%DUE_DATE","dueDate":"%DUE_DATE","isAllDay":false,"reminders":["TRIGGER:PT0S"],"timeZone":"Europe/Warsaw"}` |
 
 Co robią dodatkowe pola w Body:
 - `"priority":3` — priorytet Średni (0=brak, 1=Niski, 3=Średni, 5=Wysoki).
-- `"startDate"`/`"dueDate":"%due_date"` — termin obliczony w kroku 2 (TickTick
+- `"startDate"`/`"dueDate":"%DUE_DATE"` — termin obliczony w kroku 2 (TickTick
   potrafi ignorować `dueDate` bez towarzyszącego `startDate`).
 - `"isAllDay":false` — jawnie zaznacza, że to zadanie z konkretną godziną,
   nie całodniowe.
 - `"reminders":["TRIGGER:PT0S"]` — przypomnienie dokładnie w momencie terminu.
 - `"timeZone":"Europe/Warsaw"` — strefa czasowa do poprawnej interpretacji terminu.
 
-**Jeśli nadal nie działa:** sprawdź najpierw, czy `%due_date` faktycznie
-ma wartość — dodaj chwilowo akcję `Flash` zaraz po `JavaScriptlet` z
-tekstem `%due_date` i uruchom task ręcznie (przycisk ▶ w edytorze). Jeśli
-zamiast daty zobaczysz dosłownie tekst `%due_date`, to znaczy że
-`setGlobal()` nie zadziałał (upewnij się, że akcja JavaScriptlet ma
-włączoną opcję współdzielenia zmiennych, jeśli taka jest w Twojej wersji
-Taskera) — w takim razie napisz co dokładnie widzisz, dopracujemy to na
-pewnych danych.
+**Ważne — wielkość liter:** w Tasker zmienne **globalne muszą być pisane
+WIELKIMI LITERAMI** (`%DUE_DATE`, nie `%due_date`) — inaczej `setGlobal()`
+w JavaScriptlet po cichu nie ustawia wartości (potwierdzone testem: ze
+`setGlobal("due_date", ...)` zmienna zostawała pusta/niepodstawiona, z
+`setGlobal("DUE_DATE", ...)` działa poprawnie). Ta sama zasada dotyczy
+`%target_contact`/`%ticktick_token` z wcześniejszych kroków — jeśli
+kiedykolwiek przestaną działać, sprawdź w pierwszej kolejności wielkość
+liter.
+
+Jeśli mimo poprawnej wielkości liter `%DUE_DATE` nadal nie ma wartości,
+zdiagnozuj to tak samo jak poprzednio: dodaj chwilowo akcję `Flash` zaraz
+po `JavaScriptlet` z tekstem `%DUE_DATE`, uruchom task ręcznie (przycisk
+▶) i sprawdź co faktycznie pokazuje się jako osobny, pływający komunikat
+systemowy (nie podgląd w edytorze).
 
 Jeśli chcesz, żeby zadanie trafiało do konkretnego projektu (listy) w
 TickTick zamiast do Inbox, dodaj w Body pole `"projectId":"..."` z ID
@@ -106,7 +112,7 @@ Po dodaniu wszystkich akcji cała lista kroków w tasku powinna wyglądać tak:
 2. `Variable Search Replace`
 3. `Write File` ← dodane ręcznie
 4. `If %evtprm2 eq %target_contact`
-5. `JavaScriptlet` (oblicza `%due_date`) ← dodane ręcznie
+5. `JavaScriptlet` (oblicza `%DUE_DATE`) ← dodane ręcznie
 6. `HTTP Request` (TickTick) ← dodane ręcznie
 7. `End If`
 8. `End If`
